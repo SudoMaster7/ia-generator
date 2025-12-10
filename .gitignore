@@ -1,0 +1,24 @@
+# Ambiente Python
+.venv/
+venv/
+env/
+*.pyc
+__pycache__/
+*.egg-info/
+
+# Cache
+.cache/
+.pytest_cache/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Imagens Geradas (opcional - remova # se quiser enviar)
+.imagens_geradas/
+
+# Arquivos temporários
+*.tmp
+.DS_Store

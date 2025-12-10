@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUDO AI Lab</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a40 100%);
+            color: #e0e0e0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        .card { 
+            background: linear-gradient(145deg, #2a2d3a 0%, #212330 100%);
+            border: 1px solid #3a3d4e;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .form-label { 
+            color: #b4befe !important; 
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        .form-control, .form-select { 
+            background-color: #3a3d4e; 
+            border: 2px solid #4a4d5e; 
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 12px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus { 
+            background-color: #4a4d5e; 
+            color: #ffffff; 
+            border-color: #89b4fa;
+            box-shadow: 0 0 15px rgba(137, 180, 250, 0.3);
+        }
+        .form-control::placeholder {
+            color: #888;
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, #89b4fa 0%, #6c8fcc 100%);
+            border: none; 
+            color: #1e1e2e; 
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            padding: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(137, 180, 250, 0.3);
+        }
+        .btn-primary:hover { 
+            background: linear-gradient(135deg, #6c8fcc 0%, #5a7ab8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(137, 180, 250, 0.5);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        #resultImg { 
+            max-width: 100%; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            border: 3px solid #4a4d5e;
+        }
+        .stats-box { 
+            background: linear-gradient(145deg, #2a2d3a 0%, #1e1e2e 100%);
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-top: 20px;
+            border: 1px solid #3a3d4e;
+        }
+        .stats-box h5 {
+            color: #89b4fa;
+            font-weight: 600;
+        }
+        .stat-item {
+            color: #e0e0e0;
+            padding: 8px 0;
+        }
+        .stat-item strong {
+            color: #89b4fa;
+            font-weight: 600;
+        }
+        .progress {
+            background-color: #2a2d3a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #89b4fa 0%, #6c8fcc 100%);
+        }
+        .title-text {
+            background: linear-gradient(135deg, #89b4fa 0%, #b4befe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        .beta-badge {
+            background: linear-gradient(135deg, #f38ba8 0%, #eba0ac 100%);
+            color: #1e1e2e;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+        #progressText {
+            color: #89b4fa;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-lg">
+                    <div class="card-body p-5">
+                        <h2 class="title-text text-center mb-1">
+                            <i class="fas fa-brain"></i> SUDO AI
+                        </h2>
+                        <div class="text-center mb-4">
+                            <span class="beta-badge">BETA</span>
+                        </div>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-9">
+                                <label class="form-label">
+                                    <i class="fas fa-magic"></i> Prompt
+                                </label>
+                                <input type="text" id="promptInput" class="form-control" placeholder="Descreva sua imagem em detalhes...">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-microchip"></i> Processador
+                                </label>
+                                <select id="deviceSelect" class="form-select">
+                                    <option value="cuda">GPU (NVIDIA)</option>
+                                    <option value="cpu">CPU (Lento)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary w-100 py-3 mb-4" onclick="startGeneration()" id="generateBtn">
+                            <i class="fas fa-rocket"></i> GERAR IMAGEM
+                        </button>
+
+                        <div id="progressContainer" style="display: none;" class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span style="color: #b4befe;"><i class="fas fa-spinner fa-spin"></i> Gerando...</span>
+                                <span id="progressText">0%</span>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div id="resultArea" class="text-center" style="display: none;">
+                            <img id="resultImg" src="" alt="Resultado">
+                            
+                            <div class="stats-box text-start">
+                                <h5 class="mb-3 border-bottom pb-2">
+                                    <i class="fas fa-chart-line"></i> Estatísticas da Geração
+                                </h5>
+                                <div class="row">
+                                    <div class="col-6 stat-item">
+                                        <i class="far fa-clock"></i> Tempo Total: <strong id="statTime"></strong>
+                                    </div>
+                                    <div class="col-6 stat-item">
+                                        <i class="fas fa-microchip"></i> Dispositivo: <strong id="statDevice"></strong>
+                                    </div>
+                                    <div class="col-6 stat-item">
+                                        <i class="fas fa-shoe-prints"></i> Passos (Steps): <strong id="statSteps"></strong>
+                                    </div>
+                                    <div class="col-6 stat-item">
+                                        <i class="fas fa-check-circle"></i> Status: <strong style="color: #a6e3a1;">Concluído</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let intervalId;
+
+        async function startGeneration() {
+            const prompt = document.getElementById('promptInput').value;
+            const device = document.getElementById('deviceSelect').value;
+            const btn = document.getElementById('generateBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const resultArea = document.getElementById('resultArea');
+
+            if (!prompt) return alert("Digite um prompt!");
+
+            // Reset UI
+            btn.disabled = true;
+            resultArea.style.display = 'none';
+            progressContainer.style.display = 'block';
+            updateProgress(0);
+
+            // Inicia verificação de progresso em paralelo
+            intervalId = setInterval(checkProgress, 1000);
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ prompt: prompt, device: device })
+                });
+                
+                const data = await response.json();
+                clearInterval(intervalId);
+                updateProgress(100);
+                
+                if (data.image) {
+                    document.getElementById('resultImg').src = `data:image/png;base64,${data.image}`;
+                    document.getElementById('statTime').innerText = data.duration + " segundos";
+                    document.getElementById('statDevice').innerText = data.device;
+                    document.getElementById('statSteps').innerText = data.steps;
+                    
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        resultArea.style.display = 'block';
+                    }, 500);
+                } else {
+                    alert("Erro ao gerar imagem.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Erro de conexão.");
+            } finally {
+                btn.disabled = false;
+                clearInterval(intervalId);
+            }
+        }
+
+        async function checkProgress() {
+            try {
+                const res = await fetch('/progress');
+                const data = await res.json();
+                updateProgress(data.progress);
+            } catch (e) {
+                console.log("Erro ao checar progresso", e);
+            }
+        }
+
+        function updateProgress(val) {
+            const bar = document.getElementById('progressBar');
+            const text = document.getElementById('progressText');
+            bar.style.width = val + '%';
+            text.innerText = val + '%';
+        }
+    </script>
+</body>
+</html>

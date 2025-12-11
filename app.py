@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from engine import ImageGenerator
 from prompt_engine import MagicPromptGenerator
+from chat_engine import ChatEngine
 import os
 
 # Define o caminho correto para static e templates
@@ -19,6 +20,8 @@ app = Flask(__name__,
 image_gen = ImageGenerator()
 # Texto (CPU - Leve)
 prompt_gen = MagicPromptGenerator()
+# Chat (Cloud - Pollinations)
+chat_gen = ChatEngine()
 
 
 
@@ -48,6 +51,16 @@ def generate():
     result = image_gen.generate(prompt)
     
     return jsonify(result)
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.json
+    message = data.get('message', '')
+    history = data.get('history', [])
+    
+    response = chat_gen.chat(message, history)
+    
+    return jsonify({'response': response})
 
 @app.route('/progress')
 def progress():

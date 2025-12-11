@@ -1,11 +1,13 @@
 import torch
 from diffusers import StableDiffusionPipeline, AutoencoderKL
+from PIL import Image
 import io
 import base64
 import gc
 import time
 import os
 import re
+import requests # Necessário para API Premium
 from datetime import datetime
 
 class ImageGenerator:
@@ -22,29 +24,45 @@ class ImageGenerator:
         # Limpa memória antiga
         if self.pipe is not None:
             del self.pipe
+            self.pipe = None
             gc.collect()
             torch.cuda.empty_cache()
+
+        # Se for API Premium, não carrega modelo local
+        if target_device == "nano-banana":
+            self.current_device = target_device
+            print("--- Modo API Premium (Nano Banana) Ativado ---")
+            return
 
         model_id = "runwayml/stable-diffusion-v1-5"
         
         try:
             if target_device == "cuda":
-                # ESTRATÉGIA BLINDADA GTX 1650:
-                # 1. Carregamos tudo em float32 (padrão). Removemos o 'torch_dtype=float16'.
-                # Isso resolve o conflito de tipos (Half vs Float) e a tela preta.
+                from diffusers import DPMSolverMultistepScheduler
+
+                # 1. Carrega em Float32 (Elimina Tela Preta e Erros de Tipo)
                 self.pipe = StableDiffusionPipeline.from_pretrained(
                     model_id, 
+                    torch_dtype=torch.float32, # Precisão total para estabilidade
                     use_safetensors=True,
                     safety_checker=None, 
                     requires_safety_checker=False
                 )
 
-                # 2. Gerenciamento Agressivo de Memória
-                # Como float32 ocupa o dobro de espaço, usamos o Sequential Offload.
-                # Ele move camada por camada para a GPU. É a única forma de rodar float32 em 4GB.
-                self.pipe.enable_sequential_cpu_offload()
+                # 2. Scheduler DPM++ (Recupera a velocidade)
+                # Permite usar steps=20 com alta qualidade
+                self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(
+                    self.pipe.scheduler.config, 
+                    use_karras_sigmas=True
+                )
+
+                # 3. Otimização de Memória Rápida
+                # 'model_cpu_offload' é muito melhor que 'sequential'.
+                # Ele mantém o modelo pronto na RAM e joga para a VRAM instantaneamente.
+                self.pipe.enable_model_cpu_offload()
                 
-                # Fatiamento de atenção para reduzir picos de memória
+                # Otimizações extras
+                self.pipe.enable_vae_tiling() 
                 self.pipe.enable_attention_slicing()
                 
             else:
@@ -94,12 +112,53 @@ class ImageGenerator:
         print(f"Imagem salva em: {path}")
 
 
+    def _generate_premium(self, prompt):
+        """Gera imagem usando a API Premium (Nano Banana / Pollinations)"""
+        print(f"🍌 Gerando via Nano Banana Premium (Modelo FLUX): '{prompt}'...")
+        start_time = time.time()
+        
+        try:
+            # Usando Pollinations.ai com o modelo FLUX (Melhor qualidade)
+            seed = int(time.time())
+            # Modelo Flux, resolução HD (1024x1024), enhance=true para melhorar prompt
+            url = f"https://image.pollinations.ai/prompt/{prompt}?model=flux&width=1024&height=1024&seed={seed}&nologo=true&enhance=true"
+            
+            # Aumentado timeout para 60s para evitar erros de leitura
+            response = requests.get(url, timeout=60)
+            response.raise_for_status()
+            
+            image = Image.open(io.BytesIO(response.content))
+            
+            # Salva localmente para histórico
+            self._save_to_disk(image, prompt)
+            
+            end_time = time.time()
+            duration = round(end_time - start_time, 2)
+            
+            buffered = io.BytesIO()
+            image.save(buffered, format="PNG")
+            img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+            
+            return {
+                "image": img_str,
+                "duration": duration,
+                "device": "NANO BANANA (CLOUD)",
+                "steps": "N/A"
+            }
+            
+        except Exception as e:
+            print(f"Erro na API Nano Banana: {e}")
+            return None
+
     def cancel(self):
         """Ativa o sinal de parada"""
         print("!!! SINAL DE CANCELAMENTO RECEBIDO !!!")
         self.stop_signal = True
 
     def generate(self, prompt, steps=20): # Reduzi steps padrão para 20 para testar mais rápido
+        if self.current_device == "nano-banana":
+            return self._generate_premium(prompt)
+
         try:
             self.current_progress = 0
             start_time = time.time()

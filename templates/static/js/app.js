@@ -1,6 +1,42 @@
 let intervalId;
 let isSpinning = false;
 
+// --- SISTEMA DE SOM ---
+const audioFiles = {
+    click: new Audio('https://www.soundjay.com/buttons/button-1.mp3'),
+    magic: new Audio('https://www.soundjay.com/misc/sounds/magic-chime-01.mp3'),
+    spin: new Audio('https://www.soundjay.com/buttons/button-4.mp3'),
+    success: new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3'),
+    error: new Audio('https://www.soundjay.com/buttons/button-10.mp3'),
+    chat: new Audio('https://www.soundjay.com/buttons/button-3.mp3')
+};
+
+let isMuted = false;
+
+function playSound(name) {
+    if (isMuted || !audioFiles[name]) return;
+    try {
+        const sound = audioFiles[name].cloneNode();
+        sound.volume = 0.4;
+        sound.play().catch(e => console.log("Audio play prevented:", e));
+    } catch(e) { console.error(e); }
+}
+
+function toggleMute() {
+    isMuted = !isMuted;
+    const btn = document.getElementById('muteBtn');
+    if(isMuted) {
+        btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+        btn.classList.add('btn-secondary');
+        btn.classList.remove('btn-outline-secondary');
+    } else {
+        btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-outline-secondary');
+        playSound('click');
+    }
+}
+
 // --- DADOS DA ROLETA ---
 const roulettePrompts = {
     // --- Ultra-Realistic People ---
@@ -31,6 +67,7 @@ const promptKeys = Object.keys(roulettePrompts);
 function spinRoulette() {
     if (isSpinning) return;
     
+    playSound('spin'); // Som de roleta
     isSpinning = true;
     const wheel = document.getElementById('rouletteWheel');
     const spinBtn = document.getElementById('spinBtn');
@@ -44,13 +81,23 @@ function spinRoulette() {
     wheel.classList.add('spinning');
     label.textContent = 'Girando... 🎡';
     
+    // Efeito sonoro de "tic-tac" da roleta
+    const tickInterval = setInterval(() => {
+        const sound = audioFiles['click'].cloneNode();
+        sound.volume = 0.2;
+        sound.play().catch(() => {});
+    }, 150);
+    
     // Seleciona uma opção aleatória
     setTimeout(() => {
+        clearInterval(tickInterval); // Para o som
+        
         const randomIndex = Math.floor(Math.random() * promptKeys.length);
         const selectedKey = promptKeys[randomIndex];
         const selectedPrompt = roulettePrompts[selectedKey];
         
         wheel.classList.remove('spinning');
+        playSound('magic'); // Som de sucesso da roleta
         
         // Exibe resultado
         label.innerHTML = `<span style="color: #a6e3a1; font-size: 1.5rem;">✨ ${selectedKey} ✨</span>`;
@@ -245,6 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- FUNÇÃO MÁGICA DE PROMPT ---
 async function enhancePrompt() {
+    playSound('magic'); // Som mágico
     const input = document.getElementById('promptInput');
     const btn = document.getElementById('magicBtn');
     const originalText = input.value;
@@ -294,6 +342,10 @@ async function startGeneration() {
     progressContainer.style.display = 'block';
     updateProgress(0);
 
+    // --- PERGUNTA SE QUER JOGAR ---
+    const askModal = new bootstrap.Modal(document.getElementById('askGameModal'));
+    askModal.show();
+
     intervalId = setInterval(checkProgress, 1000);
 
     try {
@@ -311,6 +363,7 @@ async function startGeneration() {
             progressContainer.style.display = 'none';
             alert("Geração cancelada!");
         } else if (data.image) {
+            playSound('success'); // Som de sucesso
             // Se deu sucesso
             updateProgress(100);
             document.getElementById('resultImg').src = `data:image/png;base64,${data.image}`;
@@ -323,10 +376,12 @@ async function startGeneration() {
                 resultArea.style.display = 'block';
             }, 500);
         } else {
+            playSound('error'); // Som de erro
             alert("Erro ao gerar imagem.");
             progressContainer.style.display = 'none';
         }
     } catch (error) {
+        playSound('error'); // Som de erro
         console.error(error);
         alert("Erro de conexão.");
         progressContainer.style.display = 'none';
@@ -442,4 +497,111 @@ document.addEventListener('DOMContentLoaded', () => {
             isSpinning = false;
         }
     });
+
+    // --- TAB MANAGEMENT (Esconder botão Gerar no Chat) ---
+    const generateBtnContainer = document.getElementById('generateBtnContainer');
+    
+    document.getElementById('chat-tab').addEventListener('shown.bs.tab', () => {
+        if(generateBtnContainer) generateBtnContainer.style.display = 'none';
+    });
+    
+    ['manual-tab', 'roulette-tab', 'gallery-tab'].forEach(id => {
+        const tab = document.getElementById(id);
+        if(tab) {
+            tab.addEventListener('shown.bs.tab', () => {
+                if(generateBtnContainer) generateBtnContainer.style.display = 'block';
+            });
+        }
+    });
 });
+
+// --- CHAT LOGIC ---
+let chatHistory = [];
+
+function handleChatKey(event) {
+    if (event.key === 'Enter') {
+        sendChat();
+    }
+}
+
+async function sendChat() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    const container = document.getElementById('chatContainer');
+    const btn = document.getElementById('sendChatBtn');
+    
+    if (!message) return;
+    
+    // 1. Adiciona mensagem do usuário
+    appendMessage('user', message);
+    input.value = '';
+    input.disabled = true;
+    btn.disabled = true;
+    
+    // Adiciona ao histórico
+    chatHistory.push({ role: 'user', content: message });
+    
+    // 2. Mostra indicador de digitação
+    const loadingId = appendLoading();
+    
+    try {
+        const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                message: message,
+                history: chatHistory
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Remove loading
+        const loadingEl = document.getElementById(loadingId);
+        if(loadingEl) loadingEl.remove();
+        
+        // 3. Adiciona resposta da IA
+        appendMessage('ai', data.response);
+        playSound('chat'); // Som de mensagem recebida
+        
+        // Adiciona ao histórico
+        chatHistory.push({ role: 'assistant', content: data.response });
+        
+    } catch (error) {
+        const loadingEl = document.getElementById(loadingId);
+        if(loadingEl) loadingEl.remove();
+        appendMessage('ai', 'Erro ao conectar com o servidor. Tente novamente.');
+        console.error(error);
+    } finally {
+        input.disabled = false;
+        btn.disabled = false;
+        input.focus();
+    }
+}
+
+function appendMessage(role, text) {
+    const container = document.getElementById('chatContainer');
+    const div = document.createElement('div');
+    div.className = `chat-message ${role}`;
+    
+    // Converte quebras de linha em <br>
+    div.innerHTML = text.replace(/\n/g, '<br>');
+    
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function appendLoading() {
+    const container = document.getElementById('chatContainer');
+    const div = document.createElement('div');
+    const id = 'loading-' + Date.now();
+    div.id = id;
+    div.className = 'chat-message ai';
+    div.innerHTML = '<i class="fas fa-ellipsis-h fa-fade"></i>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return id;
+}
+
+// --- DINO GAME LOGIC ---
+// Moved to game.js

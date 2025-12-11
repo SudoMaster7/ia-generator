@@ -1,5 +1,5 @@
 import torch
-from diffusers import StableDiffusionPipeline
+from diffusers import StableDiffusionPipeline, AutoencoderKL
 import io
 import base64
 import gc
@@ -13,6 +13,7 @@ class ImageGenerator:
         self.current_progress = 0
         self.current_device = "cuda" if torch.cuda.is_available() else "cpu"
         self.pipe = None
+        self.stop_signal = False
         self.load_model(self.current_device)
 
     def load_model(self, target_device):
@@ -64,6 +65,7 @@ class ImageGenerator:
 
     def switch_device(self, device_name):
         if device_name != self.current_device:
+            self.current_device = device_name
             self.load_model(device_name)
         return self.current_device
 
@@ -73,15 +75,29 @@ class ImageGenerator:
             os.makedirs(folder_name)
 
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        # Limita o nome do arquivo para evitar erros, mas salva o prompt inteiro no txt
         safe_prompt = re.sub(r'[\\/*?:"<>|]', "", prompt)[:30].replace(" ", "_")
         filename = f"{timestamp}_{safe_prompt}.png"
-        filepath = os.path.join(folder_name, filename)
-
+        
+        path = os.path.join(folder_name, filename)
+        image.save(path)
+        
+        # --- NOVO: Salva o prompt completo em um arquivo de texto ---
+        txt_filename = f"{timestamp}_{safe_prompt}.txt"
+        txt_path = os.path.join(folder_name, txt_filename)
         try:
-            image.save(filepath)
-            print(f"✅ Salvo: {filename}")
+            with open(txt_path, "w", encoding="utf-8") as f:
+                f.write(prompt)
         except Exception as e:
-            print(f"Erro ao salvar: {e}")
+            print(f"Erro ao salvar prompt txt: {e}")
+            
+        print(f"Imagem salva em: {path}")
+
+
+    def cancel(self):
+        """Ativa o sinal de parada"""
+        print("!!! SINAL DE CANCELAMENTO RECEBIDO !!!")
+        self.stop_signal = True
 
     def generate(self, prompt, steps=20): # Reduzi steps padrão para 20 para testar mais rápido
         try:
@@ -121,6 +137,13 @@ class ImageGenerator:
                 "steps": steps
             }
             
+        except RuntimeError as e:
+            if "CANCELLED_BY_USER" in str(e):
+                print("--- Geração abortada com sucesso ---")
+                return {"status": "cancelled"}
+            print(f"Erro de Runtime: {e}")
+            return {"status": "error", "message": str(e)}
+            
         except Exception as e:
             print(f"Erro fatal na geração: {e}")
-            return None
+            return {"status": "error", "message": str(e)}

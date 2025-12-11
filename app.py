@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from engine import ImageGenerator
 from prompt_engine import MagicPromptGenerator
+from chat_engine import ChatAssistant
 import os
 
 # Define o caminho correto para static e templates
@@ -15,13 +16,10 @@ app = Flask(__name__,
             static_url_path='/static')
 
 # Inicializa as IAs
-# Imagem (GPU ou CPU)
+print("--- INICIALIZANDO SISTEMAS ---")
 image_gen = ImageGenerator()
-# Texto (CPU - Leve)
 prompt_gen = MagicPromptGenerator()
-
-
-
+chat_bot = ChatAssistant() # <--- INICIALIZA O CHAT
 
 @app.route('/')
 def index():
@@ -108,6 +106,28 @@ def cancel_generation():
     image_gen.cancel()
     return jsonify({'status': 'Cancelamento solicitado'})
 
+# --- NOVA ROTA DE CHAT REAL ---
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.json
+    message = data.get('message', '')
+    
+    if not message:
+        return jsonify({'response': 'Por favor, diga algo.'})
+    
+    # print(f"User: {message}")
+    response = chat_bot.generate_response(message)
+    # print(f"Bot: {response}")
+    
+    suggested_prompt = None
+    if "prompt:" in response.lower() or "create:" in response.lower():
+        suggested_prompt = response
+        
+    return jsonify({
+        'response': response,
+        'action': suggested_prompt
+    })
+
 if __name__ == '__main__':
-    # host='0.0.0.0' permite acesso externo
+    # host='0.0.0.0' permite acesso externo via IP local
     app.run(debug=True, threaded=True, host='0.0.0.0', port=5000)

@@ -29,22 +29,31 @@ class ImageGenerator:
         
         try:
             if target_device == "cuda":
-                # ESTRATÉGIA BLINDADA GTX 1650:
-                # 1. Carregamos tudo em float32 (padrão). Removemos o 'torch_dtype=float16'.
-                # Isso resolve o conflito de tipos (Half vs Float) e a tela preta.
+                from diffusers import DPMSolverMultistepScheduler
+
+                # 1. Carrega em Float32 (Elimina Tela Preta e Erros de Tipo)
                 self.pipe = StableDiffusionPipeline.from_pretrained(
                     model_id, 
+                    torch_dtype=torch.float32, # Precisão total para estabilidade
                     use_safetensors=True,
                     safety_checker=None, 
                     requires_safety_checker=False
                 )
 
-                # 2. Gerenciamento Agressivo de Memória
-                # Como float32 ocupa o dobro de espaço, usamos o Sequential Offload.
-                # Ele move camada por camada para a GPU. É a única forma de rodar float32 em 4GB.
-                self.pipe.enable_sequential_cpu_offload()
+                # 2. Scheduler DPM++ (Recupera a velocidade)
+                # Permite usar steps=20 com alta qualidade
+                self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(
+                    self.pipe.scheduler.config, 
+                    use_karras_sigmas=True
+                )
+
+                # 3. Otimização de Memória Rápida
+                # 'model_cpu_offload' é muito melhor que 'sequential'.
+                # Ele mantém o modelo pronto na RAM e joga para a VRAM instantaneamente.
+                self.pipe.enable_model_cpu_offload()
                 
-                # Fatiamento de atenção para reduzir picos de memória
+                # Otimizações extras
+                self.pipe.enable_vae_tiling() 
                 self.pipe.enable_attention_slicing()
                 
             else:

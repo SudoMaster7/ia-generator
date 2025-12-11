@@ -27,7 +27,9 @@ const roulettePrompts = {
 };
 
 const promptKeys = Object.keys(roulettePrompts);
+let currentRoulettePrompt = '';
 
+// --- FUNÇÕES DA ROLETA ---
 function spinRoulette() {
     if (isSpinning) return;
     
@@ -68,8 +70,6 @@ function spinRoulette() {
     }, 4000);
 }
 
-let currentRoulettePrompt = '';
-
 function acceptRoulette() {
     document.getElementById('promptInput').value = currentRoulettePrompt;
     
@@ -86,164 +86,7 @@ function acceptRoulette() {
     }, 2000);
 }
 
-// --- DADOS DO CHATBOT ---
-const promptBuilder = {
-    0: {
-        question: "Que tipo de imagem você quer criar?",
-        choices: ["Pessoa", "Animal", "Paisagem", "Objeto", "Fantasia", "Arte Digital"]
-    },
-    1: {
-        "Pessoa": {
-            question: "Qual é o estilo?",
-            choices: ["Realista", "Ilustrado", "Anime", "Cartoon", "Pintura a óleo"]
-        },
-        "Animal": {
-            question: "Qual animal?",
-            choices: ["Cachorro", "Gato", "Pássaro", "Dinossauro", "Fantástico"]
-        },
-        "Paisagem": {
-            question: "Que tipo de paisagem?",
-            choices: ["Natureza", "Urbana", "Futurista", "Deserto", "Montanhas"]
-        },
-        "Objeto": {
-            question: "Qual tipo de objeto?",
-            choices: ["Tecnologia", "Arma", "Joia", "Veículo", "Casa"]
-        },
-        "Fantasia": {
-            question: "Que tipo de fantasia?",
-            choices: ["Medieval", "Ficção Científica", "Mágico", "Pós-Apocalíptico"]
-        },
-        "Arte Digital": {
-            question: "Qual estilo de arte?",
-            choices: ["3D", "2D", "Pixel Art", "Neon", "Abstrato"]
-        }
-    },
-    2: {
-        question: "Qual é o ambiente/setting?",
-        choices: ["Dentro de casa", "Externo", "Espaço", "Água", "Subterrâneo"]
-    },
-    3: {
-        question: "Qual é o clima/atmosfera?",
-        choices: ["Diurno", "Noturno", "Nublado", "Tempestade", "Neblina"]
-    },
-    4: {
-        question: "Detalhes finais? (cor, qualidade, etc)",
-        choices: ["4K Ultra HD", "Cinematic", "Altamente detalhado", "Estilo conceitual", "Prosseguir"]
-    }
-};
-
-// --- FUNÇÕES DO CHATBOT ---
-function initChatbot() {
-    chatStep = 0;
-    chatChoices = {};
-    showChatQuestion();
-}
-
-function showChatQuestion() {
-    const container = document.getElementById('choicesContainer');
-    container.innerHTML = '';
-
-    if (chatStep === 1) {
-        const category = chatChoices[0];
-        const options = promptBuilder[1][category];
-        displayChoices(options.choices, chatStep);
-    } else if (chatStep === 0 || (chatStep > 1 && promptBuilder[chatStep])) {
-        const options = promptBuilder[chatStep];
-        displayChoices(options.choices, chatStep);
-    } else {
-        finalizeChatPrompt();
-    }
-}
-
-function displayChoices(choices, step) {
-    const container = document.getElementById('choicesContainer');
-    container.innerHTML = '';
-
-    choices.forEach(choice => {
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-choice';
-        btn.textContent = choice;
-        btn.onclick = () => selectChoice(choice, step);
-        container.appendChild(btn);
-    });
-}
-
-function selectChoice(choice, step) {
-    chatChoices[step] = choice;
-
-    const chatContainer = document.getElementById('chatContainer');
-    const userMsg = document.createElement('div');
-    userMsg.className = 'chat-message chat-user';
-    userMsg.innerHTML = `<strong>Você:</strong> ${choice}`;
-    chatContainer.appendChild(userMsg);
-
-    const botMsg = document.createElement('div');
-    botMsg.className = 'chat-message chat-bot';
-    botMsg.innerHTML = `<strong>🤖 AI Assistant:</strong> Ótimo! ${choice} é uma ótima escolha.`;
-    chatContainer.appendChild(botMsg);
-
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    chatStep++;
-    setTimeout(showChatQuestion, 500);
-}
-
-function sendCustomChoice() {
-    const input = document.getElementById('customInput');
-    const choice = input.value.trim();
-
-    if (!choice) return;
-
-    chatChoices[chatStep] = choice;
-
-    const chatContainer = document.getElementById('chatContainer');
-    const userMsg = document.createElement('div');
-    userMsg.className = 'chat-message chat-user';
-    userMsg.innerHTML = `<strong>Você:</strong> ${choice}`;
-    chatContainer.appendChild(userMsg);
-
-    const botMsg = document.createElement('div');
-    botMsg.className = 'chat-message chat-bot';
-    botMsg.innerHTML = `<strong>🤖 AI Assistant:</strong> Perfeito! Vou incorporar "${choice}" ao seu prompt.`;
-    chatContainer.appendChild(botMsg);
-
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-    input.value = '';
-
-    chatStep++;
-    setTimeout(showChatQuestion, 500);
-}
-
-function finalizeChatPrompt() {
-    const container = document.getElementById('choicesContainer');
-    container.innerHTML = '<button class="btn btn-primary w-100" onclick="buildFinalPrompt()"><i class="fas fa-check"></i> Criar Prompt Final</button>';
-}
-
-function buildFinalPrompt() {
-    const parts = Object.values(chatChoices);
-    const finalPrompt = parts.join(", ") + ", highly detailed, 8k, sharp focus, cinematic lighting";
-    
-    document.getElementById('promptInput').value = finalPrompt;
-
-    const manualTab = document.getElementById('manual-tab');
-    manualTab.click();
-
-    const chatContainer = document.getElementById('chatContainer');
-    const finishMsg = document.createElement('div');
-    finishMsg.className = 'chat-message chat-bot';
-    finishMsg.innerHTML = `<strong>🤖 AI Assistant:</strong> Prompt criado! Agora clique em "GERAR IMAGEM" para criar sua obra-prima.`;
-    chatContainer.appendChild(finishMsg);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-// --- INICIALIZAÇÃO DO CHATBOT NA ABA ---
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('chatbot-tab').addEventListener('click', () => {
-        setTimeout(initChatbot, 100);
-    });
-});
-
-// --- FUNÇÃO MÁGICA DE PROMPT ---
+// --- FUNÇÃO MÁGICA DE PROMPT (Botão "Melhorar") ---
 async function enhancePrompt() {
     const input = document.getElementById('promptInput');
     const btn = document.getElementById('magicBtn');
@@ -272,21 +115,18 @@ async function enhancePrompt() {
     }
 }
 
-// --- FUNÇÕES DE GERAÇÃO ---
+// --- FUNÇÕES DE GERAÇÃO DE IMAGEM ---
 async function startGeneration() {
     const prompt = document.getElementById('promptInput').value;
     const device = document.getElementById('deviceSelect').value;
     const btn = document.getElementById('generateBtn');
-    const cancelBtn = document.getElementById('cancelBtn'); // Pega o botão cancelar
+    const cancelBtn = document.getElementById('cancelBtn');
     const progressContainer = document.getElementById('progressContainer');
     const resultArea = document.getElementById('resultArea');
 
     if (!prompt) return alert("Digite um prompt!");
 
-    // Reset UI
     btn.disabled = true;
-    
-    // Reseta botão de cancelar
     cancelBtn.disabled = false;
     cancelBtn.innerHTML = '<i class="fas fa-stop-circle"></i> CANCELAR GERAÇÃO';
     
@@ -427,13 +267,118 @@ function reusePrompt() {
     document.getElementById('manual-tab').click();
 }
 
-// Carrega a galeria quando a aba é clicada
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gallery-tab').addEventListener('click', () => {
-        loadGallery();
-    });
+// --- LÓGICA DO CHATBOT (LLM) ---
+function handleChatKey(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
     
-    // --- FUNÇÕES EXISTENTES ---
+    if (!message) return;
+    
+    // 1. Adiciona mensagem do usuário
+    addChatMessage(message, 'user');
+    input.value = '';
+    input.disabled = true; // Bloqueia input enquanto pensa
+    
+    // 2. Mostra "digitando..."
+    const typingId = showTypingIndicator();
+    
+    try {
+        // 3. Chama a LLM Real
+        const res = await fetch('/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ message: message })
+        });
+        
+        const data = await res.json();
+        
+        removeTypingIndicator(typingId);
+        
+        // Verifica se há uma ação de prompt sugerida
+        let action = null;
+        if (data.action) {
+            action = { text: "Usar esta Ideia", prompt: data.response };
+        }
+        
+        addChatMessage(data.response, 'bot', action);
+        
+    } catch (error) {
+        console.error(error);
+        removeTypingIndicator(typingId);
+        addChatMessage("Erro ao conectar com o cérebro da IA.", 'bot');
+    } finally {
+        input.disabled = false;
+        input.focus();
+    }
+}
+
+function addChatMessage(text, sender, action = null) {
+    const history = document.getElementById('chatHistory');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-msg ${sender}`;
+    
+    const icon = sender === 'bot' ? '<i class="fas fa-robot"></i>' : '<i class="fas fa-user"></i>';
+    
+    let contentHtml = text;
+    
+    if (action) {
+        contentHtml += `<br><button class="chat-action-btn" onclick="useChatPrompt('${action.prompt.replace(/'/g, "\\'")}')"><i class="fas fa-magic"></i> ${action.text}</button>`;
+    }
+    
+    msgDiv.innerHTML = `
+        <div class="chat-avatar">${icon}</div>
+        <div class="chat-text">${contentHtml}</div>
+    `;
+    
+    history.appendChild(msgDiv);
+    history.scrollTop = history.scrollHeight;
+}
+
+function showTypingIndicator() {
+    const history = document.getElementById('chatHistory');
+    const id = 'typing-' + Date.now();
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-msg bot`;
+    msgDiv.id = id;
+    
+    // HTML da animação de bolinhas
+    msgDiv.innerHTML = `
+        <div class="chat-avatar"><i class="fas fa-robot"></i></div>
+        <div class="chat-text">
+            <div class="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+    `;
+    
+    history.appendChild(msgDiv);
+    history.scrollTop = history.scrollHeight;
+    return id;
+}
+
+function removeTypingIndicator(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+}
+
+function useChatPrompt(promptText) {
+    // Joga o prompt para a aba manual
+    document.getElementById('promptInput').value = promptText;
+    document.getElementById('manual-tab').click();
+}
+
+// --- INICIALIZAÇÃO ---
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('gallery-tab').addEventListener('click', loadGallery);
+    
     document.getElementById('roulette-tab').addEventListener('click', () => {
         // Para a roleta se estiver girando
         if (isSpinning) {

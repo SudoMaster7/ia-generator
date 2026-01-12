@@ -1,457 +1,47 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SUDO AI Lab</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body { 
-            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a40 100%);
-            color: #e0e0e0; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-        }
-        .card { 
-            background: linear-gradient(145deg, #2a2d3a 0%, #212330 100%);
-            border: 1px solid #3a3d4e;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
-        .form-label { 
-            color: #b4befe !important; 
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-        .form-control, .form-select { 
-            background-color: #3a3d4e; 
-            border: 2px solid #4a4d5e; 
-            color: #ffffff;
-            border-radius: 10px;
-            padding: 12px;
-            transition: all 0.3s ease;
-        }
-        .form-control:focus, .form-select:focus { 
-            background-color: #4a4d5e; 
-            color: #ffffff; 
-            border-color: #89b4fa;
-            box-shadow: 0 0 15px rgba(137, 180, 250, 0.3);
-        }
-        .form-control::placeholder { color: #888; }
-        
-        /* Botão Principal */
-        .btn-primary { 
-            background: linear-gradient(135deg, #89b4fa 0%, #6c8fcc 100%);
-            border: none; 
-            color: #1e1e2e; 
-            font-weight: bold;
-            font-size: 1.1rem;
-            border-radius: 12px;
-            padding: 14px;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(137, 180, 250, 0.3);
-        }
-        .btn-primary:hover { 
-            background: linear-gradient(135deg, #6c8fcc 0%, #5a7ab8 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 7px 20px rgba(137, 180, 250, 0.5);
-        }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        /* Botão Mágico (NOVO) */
-        .btn-magic {
-            background: linear-gradient(135deg, #f9e2af 0%, #fab387 100%);
-            color: #1e1e2e;
-            font-weight: bold;
-            border: none;
-            transition: all 0.3s ease;
-            border-radius: 10px;
-        }
-        .btn-magic:hover {
-            background: linear-gradient(135deg, #fab387 0%, #f9e2af 100%);
-            box-shadow: 0 0 15px rgba(249, 226, 175, 0.4);
-            transform: scale(1.05);
-        }
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-        /* ROLETA DE PALAVRAS */
-        .roulette-container {
-            background: linear-gradient(145deg, #2a2d3a 0%, #1e1e2e 100%);
-            border: 2px solid #3a3d4e;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-        .roulette-wheel {
-            width: 300px;
-            height: 300px;
-            margin: 0 auto 20px;
-            position: relative;
-            background: conic-gradient(
-                from 0deg,
-                #89b4fa 0deg 60deg,
-                #fab387 60deg 120deg,
-                #a6e3a1 120deg 180deg,
-                #f38ba8 180deg 240deg,
-                #cba6f7 240deg 300deg,
-                #94e2d5 300deg 360deg
-            );
-            border-radius: 50%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 5px solid #1e1e2e;
-            transition: transform 0.05s linear;
-        }
-
-        .roulette-wheel.spinning {
-            animation: spin 4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(1800deg); }
-        }
-
-        .roulette-center {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a40 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #89b4fa;
-            font-size: 12px;
-            border: 3px solid #89b4fa;
-            z-index: 10;
-        }
-
-        .roulette-pointer {
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 12px solid transparent;
-            border-right: 12px solid transparent;
-            border-top: 20px solid #89b4fa;
-            z-index: 20;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-        }
-
-        .roulette-label {
-            color: #b4befe;
-            font-weight: bold;
-            font-size: 1.3rem;
-            margin-top: 20px;
-            min-height: 30px;
-        }
-
-        .roulette-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .btn-spin {
-            background: linear-gradient(135deg, #a6e3a1 0%, #7bb869 100%);
-            color: #1e1e2e;
-            font-weight: bold;
-            border: none;
-            transition: all 0.3s ease;
-            border-radius: 10px;
-            padding: 12px 30px;
-            font-size: 1rem;
-        }
-        .btn-spin:hover {
-            background: linear-gradient(135deg, #7bb869 0%, #5fa04f 100%);
-            box-shadow: 0 0 15px rgba(166, 227, 161, 0.4);
-            transform: scale(1.05);
-        }
-        .btn-spin:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        #resultImg { 
-            max-width: 100%; 
-            border-radius: 12px; 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-            border: 3px solid #4a4d5e;
-        }
-        .stats-box { 
-            background: linear-gradient(145deg, #2a2d3a 0%, #1e1e2e 100%);
-            padding: 20px; 
-            border-radius: 12px; 
-            margin-top: 20px;
-            border: 1px solid #3a3d4e;
-        }
-        .stats-box h5 { color: #89b4fa; font-weight: 600; }
-        .stat-item { color: #e0e0e0; padding: 8px 0; }
-        .stat-item strong { color: #89b4fa; font-weight: 600; }
-        
-        .progress {
-            background-color: #2a2d3a;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .progress-bar { background: linear-gradient(90deg, #89b4fa 0%, #6c8fcc 100%); }
-        
-        .title-text {
-            background: linear-gradient(135deg, #89b4fa 0%, #b4befe 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: bold;
-        }
-        .beta-badge {
-            background: linear-gradient(135deg, #f38ba8 0%, #eba0ac 100%);
-            color: #1e1e2e;
-            padding: 2px 8px;
-            border-radius: 8px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            vertical-align: middle;
-        }
-        #progressText { color: #89b4fa; font-weight: 600; }
-
-        .nav-tabs {
-            border-bottom: 2px solid #3a3d4e;
-        }
-        .nav-link {
-            color: #b4befe !important;
-            border: none;
-            border-bottom: 3px solid transparent;
-        }
-        .nav-link.active {
-            background-color: transparent;
-            border-bottom-color: #89b4fa !important;
-            color: #89b4fa !important;
-        }
-
-        .prompt-display {
-            background-color: #3a3d4e;
-            border: 2px solid #4a4d5e;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            color: #e0e0e0;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        .prompt-display strong {
-            color: #89b4fa;
-        }
-
-        /* Estilos da Galeria */
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            max-height: 500px;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-        
-        .gallery-item {
-            position: relative;
-            border-radius: 10px;
-            overflow: hidden;
-            cursor: pointer;
-            border: 2px solid #3a3d4e;
-            transition: transform 0.2s;
-        }
-        
-        .gallery-item:hover {
-            transform: scale(1.05);
-            border-color: #89b4fa;
-        }
-        
-        .gallery-item img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-        }
-        
-        .gallery-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            font-size: 0.7rem;
-            padding: 5px;
-            opacity: 0;
-            transition: opacity 0.2s;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .gallery-item:hover .gallery-overlay {
-            opacity: 1;
-        }
-
-        /* Modal de Visualização */
-        .modal-content {
-            background-color: #2a2d3a;
-            color: #e0e0e0;
-            border: 1px solid #4a4d5e;
-        }
-        .modal-header { border-bottom: 1px solid #4a4d5e; }
-        .modal-footer { border-top: 1px solid #4a4d5e; }
-        .btn-close { filter: invert(1); }
-
-        /* --- RESPONSIVIDADE MOBILE (Adicione isto ao final do style) --- */
-        @media (max-width: 768px) {
-            /* 1. Reduz o espaçamento interno do card */
-            .card-body { 
-                padding: 1.5rem !important; 
-            }
-
-            /* 2. Ajusta o título e abas */
-            .title-text { font-size: 1.8rem; }
-            .nav-link { 
-                font-size: 0.85rem; 
-                padding: 8px 5px; 
-            }
-
-            /* 3. Transforma a Roleta em tamanho flexível */
-            .roulette-wheel {
-                width: 100% !important;
-                max-width: 280px; /* Tamanho máximo seguro para mobile */
-                height: auto !important;
-                aspect-ratio: 1/1; /* Mantém o formato circular perfeito */
-            }
-            
-            /* Ajusta o centro da roleta */
-            .roulette-center {
-                width: 60px;
-                height: 60px;
-                font-size: 10px;
-            }
-
-            /* 4. Melhora a digitação do Prompt (Empilha input e botão) */
-            .input-group {
-                flex-direction: column;
-            }
-            
-            .input-group > .form-control {
-                width: 100% !important;
-                border-radius: 10px !important;
-                margin-bottom: 10px; /* Espaço entre input e botão */
-            }
-            
-            .input-group > .btn-magic {
-                width: 100% !important;
-                border-radius: 10px !important;
-                padding: 12px;
-            }
-
-            /* 5. Botões grandes para toque fácil */
-            .btn-spin, .btn-primary, .btn-magic {
-                width: 100%;
-                display: block;
-                margin-bottom: 10px;
-            }
-            
-            .roulette-buttons {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            /* 6. Galeria em 2 colunas no mobile */
-            .gallery-grid {
-                grid-template-columns: repeat(2, 1fr); /* 2 por linha */
-                gap: 10px;
-            }
-        }
-
-        /* CHAT STYLES */
-        .chat-container {
-            height: 400px;
-            overflow-y: auto;
-            background: #2a2d3a;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #3a3d4e;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .chat-message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 15px;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            position: relative;
-            word-wrap: break-word;
-        }
-        
-        .chat-message.user {
-            align_self: flex-end;
-            background: linear-gradient(135deg, #89b4fa 0%, #6c8fcc 100%);
-            color: #1e1e2e;
-            border-bottom-right-radius: 5px;
-            margin-left: auto;
-        }
-        
-        .chat-message.ai {
-            align_self: flex-start;
-            background: #3a3d4e;
-            color: #e0e0e0;
-            border-bottom-left-radius: 5px;
-            margin-right: auto;
-            border: 1px solid #4a4d5e;
-        }
-        
-        .chat-input-area {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .chat-input-area input {
-            flex: 1;
-            background: #2a2d3a;
-            border: 1px solid #3a3d4e;
-            color: #e0e0e0;
-            border-radius: 10px;
-            padding: 12px;
-        }
-        
-        .chat-input-area input:focus {
-            background: #313442;
-            border-color: #89b4fa;
-            outline: none;
-            color: #fff;
-        }
-
-    </style>
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
+
 <body>
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="card shadow-lg">
-                    <div class="card-body p-5">
+    <div class="container-fluid py-3 h-100">
+        <div class="row justify-content-center h-100">
+            <div class="col-12 h-100">
+                <div class="card shadow-lg h-100">
+                    <div class="card-body p-4 d-flex flex-column">
                         <h2 class="title-text text-center mb-1">
                             <i class="fas fa-brain"></i> SUDO AI
-                            <button class="btn btn-sm btn-outline-secondary ms-2" id="muteBtn" onclick="toggleMute()" title="Ativar/Desativar Sons">
+                            <button class="btn btn-sm btn-outline-secondary ms-2" id="muteBtn" onclick="toggleMute()"
+                                title="Ativar/Desativar Sons">
                                 <i class="fas fa-volume-up"></i>
                             </button>
+                            <button class="btn btn-sm btn-outline-warning ms-2" onclick="openSettings()"
+                                title="Configurações de Voz e Personalidade">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <a href="/audio" class="btn btn-sm btn-outline-info ms-2" title="Ir para Audio Lab">
+                                <i class="fas fa-music"></i>
+                            </a>
+                            <a href="/ai" class="btn btn-sm btn-outline-danger ms-2" title="Ir para IA Personalizada">
+                                <i class="fas fa-robot"></i> Karen
+                            </a>
                         </h2>
                         <div class="text-center mb-4">
                             <span class="beta-badge">BETA</span>
@@ -460,30 +50,34 @@
                         <!-- ABAS -->
                         <ul class="nav nav-tabs mb-4" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manualTab" type="button">
+                                <button class="nav-link active" id="manual-tab" data-bs-toggle="tab"
+                                    data-bs-target="#manualTab" type="button">
                                     <i class="fas fa-keyboard"></i> Prompt Manual
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="roulette-tab" data-bs-toggle="tab" data-bs-target="#rouletteTab" type="button">
+                                <button class="nav-link" id="roulette-tab" data-bs-toggle="tab"
+                                    data-bs-target="#rouletteTab" type="button">
                                     <i class="fas fa-circle-notch"></i> Roleta Mágica
                                 </button>
                             </li>
                             <!-- NOVA ABA GALERIA -->
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#galleryTab" type="button">
+                                <button class="nav-link" id="gallery-tab" data-bs-toggle="tab"
+                                    data-bs-target="#galleryTab" type="button">
                                     <i class="fas fa-images"></i> Galeria
                                 </button>
                             </li>
                             <!-- NOVA ABA CHAT -->
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chatTab" type="button">
+                                <button class="nav-link" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chatTab"
+                                    type="button">
                                     <i class="fas fa-comments"></i> Chat
                                 </button>
                             </li>
                         </ul>
 
-                        <div class="tab-content">
+                        <div class="tab-content flex-grow-1">
                             <!-- TAB 1: PROMPT MANUAL -->
                             <div class="tab-pane fade show active" id="manualTab">
                                 <div class="row g-3 mb-4">
@@ -492,8 +86,10 @@
                                             <i class="fas fa-magic"></i> Prompt
                                         </label>
                                         <div class="input-group">
-                                            <input type="text" id="promptInput" class="form-control" placeholder="Descreva sua imagem (ex: gato astronauta)...">
-                                            <button class="btn btn-magic" type="button" onclick="enhancePrompt()" id="magicBtn" title="Usar IA para melhorar o prompt">
+                                            <input type="text" id="promptInput" class="form-control"
+                                                placeholder="Descreva sua imagem (ex: gato astronauta)...">
+                                            <button class="btn btn-magic" type="button" onclick="enhancePrompt()"
+                                                id="magicBtn" title="Usar IA para melhorar o prompt">
                                                 <i class="fas fa-wand-magic-sparkles"></i> Melhorar
                                             </button>
                                         </div>
@@ -503,9 +99,9 @@
                                             <i class="fas fa-microchip"></i> Processador
                                         </label>
                                         <select id="deviceSelect" class="form-select">
+                                            <option value="nano-banana">🍌 Premium (Nano Banana)</option>
                                             <option value="cuda">GPU (NVIDIA)</option>
                                             <option value="cpu">CPU (Lento)</option>
-                                            <option value="nano-banana">🍌 Premium (Nano Banana)</option>
                                         </select>
                                     </div>
                                 </div>
@@ -515,7 +111,7 @@
                             <div class="tab-pane fade" id="rouletteTab">
                                 <div class="roulette-container">
                                     <h4 class="mb-4" style="color: #b4befe;">🎡 Roleta de Prompts Mágicos</h4>
-                                    
+
                                     <div class="roulette-pointer"></div>
                                     <div class="roulette-wheel" id="rouletteWheel">
                                         <div class="roulette-center">SPIN!</div>
@@ -529,7 +125,8 @@
                                         <button class="btn btn-spin" onclick="spinRoulette()" id="spinBtn">
                                             <i class="fas fa-dice"></i> Girar Roleta
                                         </button>
-                                        <button class="btn btn-magic" onclick="acceptRoulette()" id="acceptBtn" style="display: none;">
+                                        <button class="btn btn-magic" onclick="acceptRoulette()" id="acceptBtn"
+                                            style="display: none;">
                                             <i class="fas fa-check"></i> Aceitar Prompt
                                         </button>
                                     </div>
@@ -557,17 +154,30 @@
 
                             <!-- TAB 4: CHAT -->
                             <div class="tab-pane fade" id="chatTab">
-                                <h4 class="mb-4" style="color: #b4befe;">💬 Chat Inteligente (Cloud)</h4>
-                                
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="mb-0" style="color: #b4befe;">💬 Chat Inteligente (Cloud)</h4>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="ttsToggle">
+                                        <label class="form-check-label small text-muted" for="ttsToggle"><i
+                                                class="fas fa-volume-up"></i> Ler Respostas</label>
+                                    </div>
+                                </div>
+
                                 <div class="chat-container" id="chatContainer">
                                     <div class="chat-message ai">
                                         Olá! Eu sou sua IA assistente na nuvem. Como posso ajudar você hoje?
                                     </div>
                                 </div>
-                                
+
                                 <div class="chat-input-area">
-                                    <input type="text" id="chatInput" placeholder="Digite sua mensagem..." onkeypress="handleChatKey(event)">
-                                    <button class="btn btn-magic" onclick="sendChat()" id="sendChatBtn" style="width: auto; margin-bottom: 0;">
+                                    <input type="text" id="chatInput" placeholder="Digite sua mensagem..."
+                                        onkeypress="handleChatKey(event)">
+                                    <button class="btn btn-outline-secondary" onclick="startListening()" id="micBtn"
+                                        title="Falar">
+                                        <i class="fas fa-microphone"></i>
+                                    </button>
+                                    <button class="btn btn-magic" onclick="sendChat()" id="sendChatBtn"
+                                        style="width: auto; margin-bottom: 0;">
                                         <i class="fas fa-paper-plane"></i>
                                     </button>
                                 </div>
@@ -576,7 +186,8 @@
 
                         <!-- BOTÃO GERAR (Comum) -->
                         <div id="generateBtnContainer">
-                            <button class="btn btn-primary w-100 py-3 mb-4 mt-4" onclick="startGeneration()" id="generateBtn">
+                            <button class="btn btn-primary w-100 py-3 mb-4 mt-4" onclick="startGeneration()"
+                                id="generateBtn">
                                 <i class="fas fa-rocket"></i> GERAR IMAGEM
                             </button>
                         </div>
@@ -588,9 +199,10 @@
                                 <span id="progressText">0%</span>
                             </div>
                             <div class="progress mb-3" style="height: 25px;">
-                                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" style="width: 0%"></div>
                             </div>
-                            
+
                             <!-- BOTÃO CANCELAR -->
                             <button class="btn btn-danger w-100" onclick="cancelGeneration()" id="cancelBtn">
                                 <i class="fas fa-stop-circle"></i> CANCELAR GERAÇÃO
@@ -600,7 +212,7 @@
                         <!-- RESULTADO -->
                         <div id="resultArea" class="text-center" style="display: none;">
                             <img id="resultImg" src="" alt="Resultado">
-                            
+
                             <div class="stats-box text-start">
                                 <h5 class="mb-3 border-bottom pb-2">
                                     <i class="fas fa-chart-line"></i> Estatísticas da Geração
@@ -613,10 +225,12 @@
                                         <i class="fas fa-microchip"></i> Dispositivo: <strong id="statDevice"></strong>
                                     </div>
                                     <div class="col-6 stat-item">
-                                        <i class="fas fa-shoe-prints"></i> Passos (Steps): <strong id="statSteps"></strong>
+                                        <i class="fas fa-shoe-prints"></i> Passos (Steps): <strong
+                                            id="statSteps"></strong>
                                     </div>
                                     <div class="col-6 stat-item">
-                                        <i class="fas fa-check-circle"></i> Status: <strong style="color: #a6e3a1;">Concluído</strong>
+                                        <i class="fas fa-check-circle"></i> Status: <strong
+                                            style="color: #a6e3a1;">Concluído</strong>
                                     </div>
                                 </div>
                             </div>
@@ -630,27 +244,27 @@
 
     <!-- MODAL PARA VER IMAGEM GRANDE -->
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Detalhes da Imagem</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body text-center">
-            <img id="modalImage" src="" class="img-fluid rounded mb-3" style="max-height: 70vh;">
-            <div class="p-3 bg-dark rounded text-start">
-                <small class="text-muted">Prompt:</small>
-                <p id="modalPrompt" class="mb-0 text-white"></p>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalhes da Imagem</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" class="img-fluid rounded mb-3" style="max-height: 70vh;">
+                    <div class="p-3 bg-dark rounded text-start">
+                        <small class="text-muted">Prompt:</small>
+                        <p id="modalPrompt" class="mb-0 text-white"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="reusePrompt()">
+                        <i class="fas fa-redo"></i> Reutilizar Prompt
+                    </button>
+                </div>
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            <button type="button" class="btn btn-primary" onclick="reusePrompt()">
-                <i class="fas fa-redo"></i> Reutilizar Prompt
-            </button>
-          </div>
         </div>
-      </div>
     </div>
 
     <!-- MODAL DO JOGO (DINO RUN) -->
@@ -659,12 +273,15 @@
             <div class="modal-content" style="background-color: #2a2d3a; color: #e0e0e0; border: 2px solid #89b4fa;">
                 <div class="modal-header border-0">
                     <h5 class="modal-title"><i class="fas fa-gamepad"></i> Dino Run - Enquanto espera...</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="stopGame()"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"
+                        onclick="stopGame()"></button>
                 </div>
                 <div class="modal-body text-center p-4">
-                    <canvas id="gameCanvas" width="600" height="200" style="background: #fff; border-radius: 8px; max-width: 100%; box-shadow: 0 0 20px rgba(137, 180, 250, 0.2);"></canvas>
+                    <canvas id="gameCanvas" width="600" height="200"
+                        style="background: #fff; border-radius: 8px; max-width: 100%; box-shadow: 0 0 20px rgba(137, 180, 250, 0.2);"></canvas>
                     <div class="mt-3">
-                        <p class="mb-1">Pressione <strong>ESPAÇO</strong> ou <strong>TOQUE</strong> na tela para pular!</p>
+                        <p class="mb-1">Pressione <strong>ESPAÇO</strong> ou <strong>TOQUE</strong> na tela para pular!
+                        </p>
                         <h3 id="gameScore" style="color: #89b4fa; font-weight: bold;">Score: 0</h3>
                     </div>
                 </div>
@@ -701,8 +318,60 @@
         </div>
     </div>
 
+    <!-- MODAL DE CONFIGURAÇÕES (VOZ & PERSONALIDADE) -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-sliders-h"></i> Configurações do Chat</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Personalidade -->
+                    <div class="mb-4">
+                        <label class="form-label"><i class="fas fa-user-astronaut"></i> Personalidade (System
+                            Prompt)</label>
+                        <textarea id="systemPromptInput" class="form-control" rows="3"
+                            placeholder="Ex: Você é um pirata rabugento..."></textarea>
+                        <div class="form-text text-muted">Defina como a IA deve se comportar.</div>
+                    </div>
+
+                    <hr class="border-secondary">
+
+                    <!-- Voz -->
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-microphone-alt"></i> Voz (Text-to-Speech)</label>
+                        <select id="voiceSelect" class="form-select">
+                            <option value="" disabled selected>Carregando vozes...</option>
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="form-label">Velocidade</label>
+                            <input type="range" class="form-range" id="voiceRate" min="-50" max="50" value="0">
+                            <div class="text-center small text-muted" id="voiceRateVal">0%</div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Tom (Pitch)</label>
+                            <input type="range" class="form-range" id="voicePitch" min="-20" max="20" value="0">
+                            <div class="text-center small text-muted" id="voicePitchVal">0Hz</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> Salvar Configurações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/game.js') }}"></script>
 </body>
+
 </html>

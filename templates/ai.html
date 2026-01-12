@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerebro - IA Personalizada</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            border-bottom: 2px solid #667eea;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* === PAINEL PRINCIPAL (IA) === */
+        .ai-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ai-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .ai-name {
+            font-size: 2em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .ai-status {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-size: 0.9em;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .status-label {
+            font-weight: bold;
+            font-size: 0.8em;
+            opacity: 0.8;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        /* === VISUALIZADOR DE ONDAS === */
+        .wave-visualizer {
+            background: #1a1a2e;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wave-canvas {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            background: radial-gradient(circle at center, #16213e 0%, #0f3460 100%);
+        }
+
+        .wave-label {
+            color: #667eea;
+            font-size: 0.85em;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .ai-speaking {
+            animation: pulse-glow 0.6s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: inset 0 0 20px rgba(102, 126, 234, 0.5); }
+            50% { box-shadow: inset 0 0 40px rgba(102, 126, 234, 0.8); }
+        }
+
+        /* === CHAT HISTORY === */
+        .chat-history {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            animation: fadeIn 0.3s ease-in;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: 20px;
+            border-radius: 15px 15px 5px 15px;
+        }
+
+        .message.ai {
+            background: #e8e8e8;
+            color: #333;
+            margin-right: 20px;
+            border-radius: 15px 15px 15px 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .message-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .message-text code {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .message-text strong {
+            font-weight: bold;
+        }
+
+        .message-text em {
+            font-style: italic;
+        }
+
+        .message-text ul, .message-text ol {
+            margin: 10px 0 10px 20px;
+            padding-left: 10px;
+        }
+
+        .message-time {
+            font-size: 0.75em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .message-badge {
+            display: inline-block;
+            background: #ffc107;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin-right: 5px;
+        }
+
+        /* === CONTROLES DE ENTRADA === */
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-text {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .input-text:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-width: 120px;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-send:active {
+            transform: translateY(0);
+        }
+
+        .btn-voice {
+            background: #ff6b6b;
+            color: white;
+            min-width: 120px;
+            position: relative;
+        }
+
+        .btn-voice:hover {
+            background: #ff5252;
+        }
+
+        .btn-voice.recording {
+            animation: pulse-record 0.6s infinite;
+        }
+
+        @keyframes pulse-record {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
+        }
+
+        /* === PAINEL LATERAL === */
+        .sidebar {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .memory-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .memory-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85em;
+            border-left: 3px solid #667eea;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .gallery-item {
+            aspect-ratio: 1;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-item img, .gallery-item audio {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .audio-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            color: white;
+            font-size: 0.85em;
+        }
+
+        .audio-item-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .audio-item-time {
+            font-size: 0.75em;
+            opacity: 0.8;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .loading::after {
+            content: '.';
+            animation: dots 1.5s steps(3, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* === RESPONSIVO === */
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                gap: 10px;
+            }
+
+            .panel {
+                flex: 1;
+                min-height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .main-container {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .ai-panel {
+                padding: 15px;
+            }
+
+            .sidebar {
+                flex-direction: column;
+            }
+
+            .panel {
+                width: 100%;
+            }
+
+            .chat-history {
+                height: 200px;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🧠 <span id="ai-name">Karen</span> - IA Personalizada</h1>
+        <p>Sua IA com personalidade própria e vontade de conversar</p>
+    </header>
+
+    <div class="main-container">
+        <!-- === PAINEL PRINCIPAL === -->
+        <div class="ai-panel">
+            <!-- Info da IA -->
+            <div class="ai-info">
+                <div class="ai-name">Karen</div>
+                <div class="ai-status">
+                    <div class="status-item">
+                        <span class="status-label">Humor</span>
+                        <span class="status-value" id="mood-display">😐 Neutral</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Energia</span>
+                        <div style="width: 100px; height: 20px; background: rgba(255,255,255,0.2); border-radius: 10px; margin: 5px auto 0;">
+                            <div id="energy-bar" style="height: 100%; background: #00ff00; border-radius: 10px; width: 70%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Status</span>
+                        <span class="status-value" id="status-display">🟢 Online</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualizador de Ondas -->
+            <div class="wave-visualizer" id="wave-container">
+                <canvas id="wave-canvas" class="wave-canvas"></canvas>
+                <div class="wave-label" id="wave-label">🎤 Aguardando...</div>
+            </div>
+
+            <!-- Chat History -->
+            <div class="chat-history" id="chat-history">
+                <div class="loading">Iniciando conversa</div>
+            </div>
+
+            <!-- Input Section -->
+            <div class="input-section">
+                <input 
+                    type="text" 
+                    class="input-text" 
+                    id="message-input" 
+                    placeholder="Digite sua mensagem..."
+                    autocomplete="off"
+                />
+                <button class="btn btn-send" id="send-btn">Enviar</button>
+                <button class="btn btn-voice" id="voice-btn">🎙️ Falar</button>
+                <button class="btn btn-send" id="settings-btn" style="background: #764ba2; min-width: 50px;">⚙️</button>
+            </div>
+        </div>
+
+        <!-- === PAINEL LATERAL === -->
+        <div class="sidebar">
+            <!-- Painel de Status -->
+            <div class="panel">
+                <h3>📊 Status da IA</h3>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="info">Info</button>
+                    <button class="tab-btn" data-tab="memory">Memória</button>
+                </div>
+
+                <div id="info" class="tab-content active">
+                    <div class="memory-list">
+                        <div class="memory-item">
+                            <strong>Nome da IA:</strong>
+                            <div id="ai-name-display">Karen</div>
+                        </div>
+                        <div class="memory-item">
+                            <strong>Nome do Usuário:</strong>
+                            <div id="user-name-display">Desconhecido</div>
+                        </div>
+                        <div class="memory-item">
+                            <strong>Tópicos Discutidos:</strong>
+                            <div id="topics-display">Nenhum ainda</div>
+                        </div>
+                        <div class="memory-item">
+                            <strong>Interações:</strong>
+                            <div id="interaction-count">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="memory" class="tab-content">
+                    <div class="memory-list" id="memory-list">
+                        <div class="loading">Carregando memória</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Painel de Áudios -->
+            <div class="panel">
+                <h3>🎙️ Falas Gravadas</h3>
+                <div class="memory-list" id="audios-list">
+                    <div class="loading">Carregando áudios</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- === MODAL DE CONFIGURAÇÕES === -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <button class="close-btn" onclick="closeSettings()">&times;</button>
+            <h2 style="color: #667eea; margin-bottom: 20px;">⚙️ Configurações</h2>
+            
+            <!-- Nome da IA -->
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Nome da IA:</label>
+                <input type="text" id="ai-name-input" class="form-input" placeholder="Karen" 
+                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+
+            <!-- Personalidade -->
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Personalidade:</label>
+                <select id="personality-select" class="form-input" 
+                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="sarcastic">😏 Sarcástica (Karen)</option>
+                    <option value="helpful">😊 Prestativa</option>
+                    <option value="curious">🤔 Curiosa</option>
+                    <option value="mysterious">🎭 Misteriosa (JARVIS)</option>
+                </select>
+            </div>
+
+            <!-- Voz -->
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Voz:</label>
+                <select id="voice-select" class="form-input" 
+                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="karen_pt">👩 Feminina (Karen)</option>
+                    <option value="male_pt">👨 Masculina (João)</option>
+                </select>
+            </div>
+
+            <!-- Humor -->
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">
+                    Humor: <span id="mood-display-config">Neutro</span>
+                </label>
+                <input type="range" id="mood-slider" min="0" max="100" value="50" 
+                       style="width: 100%;" onchange="updateMoodDisplay()">
+                <small style="color: #999;">Triste ← → Feliz</small>
+            </div>
+
+            <!-- Energia -->
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">
+                    Energia: <span id="energy-display-config">70%</span>
+                </label>
+                <input type="range" id="energy-slider" min="0" max="100" value="70" 
+                       style="width: 100%;" onchange="updateEnergyDisplay()">
+                <small style="color: #999;">Cansado ← → Energético</small>
+            </div>
+
+            <!-- Tendência de Fala -->
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">
+                    Frequência de Fala Espontânea: <span id="tendency-display-config">60%</span>
+                </label>
+                <input type="range" id="tendency-slider" min="0" max="100" value="60" 
+                       style="width: 100%;" onchange="updateTendencyDisplay()">
+                <small style="color: #999;">Silenciosa ← → Muito Faladora</small>
+            </div>
+
+            <!-- Tópicos -->
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Tópicos (separados por vírgula):</label>
+                <input type="text" id="topics-input" class="form-input" placeholder="tecnologia, música, games" 
+                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+
+            <!-- Botões -->
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="saveSettings()" style="flex: 1; padding: 10px; background: #667eea; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
+                    Salvar
+                </button>
+                <button onclick="closeSettings()" style="flex: 1; padding: 10px; background: #ccc; color: #333; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === MODAL STYLES === -->
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="/static/js/wave-visualizer.js"></script>
+    <script src="/static/js/ai-chat.js"></script>
+    <script>
+        // Funções globais para o modal (onclick)
+        function openSettings() {
+            if (window.aiChat) {
+                window.aiChat.openSettings();
+            }
+        }
+
+        function closeSettings() {
+            if (window.aiChat) {
+                window.aiChat.closeSettings();
+            }
+        }
+
+        function saveSettings() {
+            if (window.aiChat) {
+                window.aiChat.saveSettings();
+            }
+        }
+
+        function updateMoodDisplay() {
+            if (window.aiChat) {
+                window.aiChat.updateMoodDisplay();
+            }
+        }
+
+        function updateEnergyDisplay() {
+            if (window.aiChat) {
+                window.aiChat.updateEnergyDisplay();
+            }
+        }
+
+        function updateTendencyDisplay() {
+            if (window.aiChat) {
+                window.aiChat.updateTendencyDisplay();
+            }
+        }
+    </script>
+</body>
+</html>

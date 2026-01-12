@@ -8,6 +8,36 @@ O diferencial deste projeto é a engenharia de otimização realizada para permi
 
 ---
 
+## 🤖 NOVO: Sistema de IA Personalizada com Vontade Própria
+
+**Agora o CEREBRO inclui uma IA similar a Karen (Bob Esponja) ou JARVIS que fala quando quer!**
+
+Acesse: **`http://localhost:5000/ai`**
+
+### Características Principais:
+
+✨ **Personalidade Própria** - A IA tem humor que varia conforme conversas
+🎤 **Fala Espontânea** - Pode iniciar conversas por conta própria (15-30s)
+📊 **Ondas de Frequência** - Visualização em tempo real tipo radar
+🔊 **Áudio Naturalmente** - Cada resposta é convertida para fala (Edge-TTS)
+💾 **Galeria Inteligente** - Todas as falas salvas com metadados
+🧠 **Aprende sobre Você** - Memoriza tópicos e preferências do usuário
+
+### Acesso Rápido:
+- **Interface IA:** http://localhost:5000/ai
+- **Galeria:** http://localhost:5000/gallery
+- **Documentação Completa:** [SISTEMA_IA_PERSONALIZADA.md](SISTEMA_IA_PERSONALIZADA.md)
+
+### Próximos Passos:
+1. Instale as dependências: `pip install -r requirements.txt`
+2. Rode o servidor: `python app.py`
+3. Acesse `/ai` no navegador
+4. Comece a conversar! 💬
+
+**Para mais detalhes, veja [INICIO_RAPIDO.md](INICIO_RAPIDO.md)**
+
+---
+
 ![alt text]({31A1549F-C331-4FBD-B854-51ED3FF45870}.png)
 
 ---

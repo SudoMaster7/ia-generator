@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEREBRO - Seu Assistente Pessoal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            color: #333;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: -20%;
+            background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12), transparent 55%),
+                        radial-gradient(circle at 80% 10%, rgba(0, 255, 255, 0.12), transparent 60%),
+                        radial-gradient(circle at 50% 80%, rgba(118, 75, 162, 0.18), transparent 65%);
+            filter: blur(0px);
+            animation: bgShift 18s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        /* === HEADER MODERNO === */
+        header {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 25px 40px;
+            text-align: center;
+            border-bottom: 3px solid #00bfff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header h1 {
+            font-size: 3em;
+            color: white;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: 2px;
+        }
+
+        header p {
+            color: #00bfff;
+            font-size: 1.1em;
+            font-weight: 300;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            inset: -60%;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 191, 255, 0.18), transparent 60%);
+            animation: headerGlow 12s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 25px;
+            padding: 30px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+            flex: 1;
+            width: 100%;
+            min-height: 0;
+            backdrop-filter: saturate(140%) blur(6px);
+        }
+
+        /* === PAINEL PRINCIPAL === */
+        .ai-panel {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            .sidebar {
+                display: none;
+            }
+
+            .about-panel,
+            .quick-panel,
+            .status-online,
+            .status-mood,
+            header p {
+                display: none;
+            }
+
+            .cmd-btn {
+                font-size: 0.85em;
+                padding: 10px 12px;
+                text-align: center;
+            }
+        }
+
+        .ai-name {
+            font-size: 2.5em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .ai-status {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .status-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.92) 0%, rgba(118, 75, 162, 0.88) 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .status-card::after {
+            content: '';
+            position: absolute;
+            inset: -40%;
+            background: radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.25), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .status-card:hover::after {
+            opacity: 1;
+        }
+
+        .status-label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .status-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        /* === VISUALIZADOR DE ONDAS === */
+        #wave-container {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #wave-label {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+        }
+
+        #wave-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0.35;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .ai-visual {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            padding: 30px 0 60px;
+        }
+
+        .ai-face {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.9) 0%, rgba(102,126,234,0.9) 45%, rgba(118,75,162,0.9) 100%);
+            box-shadow: 0 30px 60px rgba(102, 126, 234, 0.45);
+            overflow: hidden;
+            animation: facePulse 6s ease-in-out infinite;
+        }
+
+        .ai-face-inner {
+            position: absolute;
+            inset: 22px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 20%, rgba(255,255,255,0.75) 0%, rgba(26, 54, 126, 0.85) 55%, rgba(28, 30, 76, 0.95) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 0 12px rgba(102, 126, 234, 0.6));
+        }
+
+        .ai-face-inner::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 50%, rgba(102,126,234,0.35) 0%, transparent 65%);
+            mix-blend-mode: screen;
+        }
+
+        .ai-eye {
+            position: absolute;
+            top: 42%;
+            width: 48px;
+            height: 22px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.9), rgba(102, 126, 234, 0.9));
+            box-shadow: 0 0 18px rgba(0, 255, 255, 0.35);
+            transform-origin: center;
+            animation: eyeBlink 6s infinite;
+        }
+
+        .ai-eye.left {
+            left: 28%;
+        }
+
+        .ai-eye.right {
+            right: 28%;
+            animation-delay: 0.2s;
+        }
+
+        .ai-mouth {
+            position: absolute;
+            bottom: 32%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 18px;
+            border-radius: 50px;
+            background: linear-gradient(90deg, rgba(102,126,234,0.8), rgba(0,255,255,0.8));
+            box-shadow: 0 0 12px rgba(102, 126, 234, 0.45);
+            animation: mouthTalk 3s ease-in-out infinite;
+        }
+
+        .ai-scan-line {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0,255,255,0.7), transparent);
+            animation: scanMove 4s linear infinite;
+        }
+
+        .ai-face-ring {
+            position: absolute;
+            inset: -12px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            mix-blend-mode: screen;
+            animation: ringSpin 18s linear infinite;
+        }
+
+        .ai-face-ring.ring-2 {
+            inset: -24px;
+            border-color: rgba(102, 126, 234, 0.25);
+            animation-duration: 26s;
+        }
+
+        .ai-face-ring.ring-3 {
+            inset: -38px;
+            border-color: rgba(0, 255, 255, 0.25);
+            animation-duration: 32s;
+        }
+
+        .ai-particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.6);
+            animation: particleFloat 6s ease-in-out infinite;
+        }
+
+        .ai-particle.p2 { top: 70%; right: 18%; animation-delay: 1.2s; }
+        .ai-particle.p3 { bottom: 10%; left: 60%; animation-delay: 2.4s; }
+
+        @keyframes eyeBlink {
+            0%, 46%, 48%, 100% { transform: scaleY(1); }
+            47% { transform: scaleY(0.1); }
+        }
+
+        @keyframes mouthTalk {
+            0%, 40%, 100% { transform: translateX(-50%) scaleY(0.6); }
+            20% { transform: translateX(-50%) scaleY(1); }
+            60% { transform: translateX(-50%) scaleY(0.8); }
+            80% { transform: translateX(-50%) scaleY(1.1); }
+        }
+
+        @keyframes scanMove {
+            0% { top: 15%; }
+            50% { top: 75%; }
+            100% { top: 15%; }
+        }
+
+        @keyframes ringSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes particleFloat {
+            0%, 100% { transform: translate(0, 0); opacity: 0.8; }
+            50% { transform: translate(6px, -12px); opacity: 0.4; }
+        }
+
+        @keyframes bgShift {
+            0% { transform: translate3d(-4%, -3%, 0) scale(1.05); }
+            50% { transform: translate3d(3%, 2%, 0) scale(1); }
+            100% { transform: translate3d(6%, 4%, 0) scale(1.08); }
+        }
+
+        @keyframes headerGlow {
+            0% { transform: scale(0.95) translateY(-4%); opacity: 0.4; }
+            50% { transform: scale(1.08) translateY(6%); opacity: 0.7; }
+            100% { transform: scale(0.98) translateY(-6%); opacity: 0.5; }
+        }
+
+        /* === CHAT HISTORY === */
+        .chat-history {
+            background: linear-gradient(160deg, rgba(248, 249, 253, 0.92), rgba(234, 237, 255, 0.75));
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            flex: 0 0 260px;
+            max-height: 260px;
+            overflow-y: auto;
+            border: 1px solid rgba(102, 126, 234, 0.18);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 12px;
+            animation: slideIn 0.3s ease-in;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: 30px;
+            border-radius: 15px 15px 5px 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .message.ai {
+            background: white;
+            color: #333;
+            margin-right: 30px;
+            border-radius: 15px 15px 15px 5px;
+            border: 2px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .message-time {
+            font-size: 0.75em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        /* === INPUT SECTION === */
+        .input-section {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .loading-banner {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.35);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(236, 240, 255, 0.78));
+            box-shadow: 0 12px 30px rgba(30, 60, 114, 0.18);
+        }
+
+        .loading-banner.visible {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top-color: rgba(102, 126, 234, 0.9);
+            animation: spin 0.75s linear infinite;
+        }
+
+        .loading-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .loading-info span {
+            color: #3a4780;
+            font-size: 0.95em;
+            font-weight: 600;
+        }
+
+        .loading-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .loading-actions button {
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #ff8a65, #ff5252);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 6px 18px rgba(255, 138, 101, 0.35);
+        }
+
+        .loading-actions button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 22px rgba(255, 82, 82, 0.45);
+        }
+
+        .input-text {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .input-text:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 10px 24px rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #6d7dff 0%, #9c52ff 100%);
+            color: white;
+            min-width: 100px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+            box-shadow: 0 6px 18px rgba(242, 153, 74, 0.45);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff3b3b 100%);
+            box-shadow: 0 6px 22px rgba(255, 59, 59, 0.45);
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-voice {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            min-width: 50px;
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-voice:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+        }
+
+        .btn-voice.recording {
+            animation: recording 0.6s infinite;
+        }
+
+        @keyframes recording {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-settings {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            min-width: 50px;
+            box-shadow: 0 4px 15px rgba(250, 112, 154, 0.4);
+        }
+
+        /* === SIDEBAR === */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .panel {
+            background: linear-gradient(140deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.62));
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 12px 32px rgba(40, 60, 120, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(12px);
+        }
+
+        .panel h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        /* === QUICK COMMANDS === */
+        .quick-commands {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .cmd-btn {
+            background: linear-gradient(135deg, #7285ff 0%, #a259ff 100%);
+            color: white;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+            font-size: 0.9em;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 18px rgba(102, 126, 234, 0.35);
+        }
+
+        .cmd-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(102, 126, 234, 0.45);
+        }
+
+        /* === SETTINGS MODAL === */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 25px;
+            max-width: 550px;
+            width: 95%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 2em;
+            font-weight: bold;
+            cursor: pointer;
+            color: #667eea;
+            background: none;
+            border: none;
+        }
+
+        .close-btn:hover {
+            color: #764ba2;
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            clear: both;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .save-btn:hover {
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .cancel-btn {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .cancel-btn:hover {
+            background: #d0d0d0;
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+                padding: 25px 30px;
+            }
+
+            .sidebar {
+                flex-direction: row;
+                flex-wrap: wrap;
+                overflow: visible;
+                padding-right: 0;
+            }
+
+            .sidebar .panel {
+                flex: 1 1 320px;
+            }
+
+            .quick-commands {
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 20px;
+            }
+
+            header h1 {
+                font-size: 2.2em;
+            }
+
+            .ai-status {
+                grid-template-columns: 1fr;
+            }
+
+            .main-container {
+                padding: 18px;
+                gap: 18px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .ai-panel {
+                padding: 22px;
+                overflow: visible;
+                gap: 22px;
+            }
+
+            .status-energy {
+                display: none;
+            }
+
+            .status-mood {
+                display: none;
+            }
+
+            #wave-container {
+                min-height: 240px;
+                padding: 18px;
+            }
+
+            .chat-history {
+                flex: initial;
+                max-height: min(340px, 45vh);
+                height: auto;
+                overflow-y: auto;
+            }
+
+            .input-section {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .ai-face {
+                width: 165px;
+                height: 165px;
+            }
+            #wave-label {
+                font-size: 1.05em;
+                bottom: 18px;
+            }
+            .ai-visual {
+                padding: 16px 0 36px;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .loading-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .loading-actions {
+                width: 100%;
+            }
+
+            .loading-actions button {
+                width: 100%;
+                text-align: center;
+            }
+
+            .sidebar {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .quick-commands {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .sidebar .panel {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 520px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            header p {
+                font-size: 1em;
+            }
+
+            .ai-panel {
+                padding: 18px;
+                gap: 20px;
+            }
+
+            #wave-container {
+                min-height: 200px;
+                padding: 16px;
+            }
+
+            .chat-history {
+                padding: 15px;
+                flex: initial;
+                max-height: min(300px, 48vh);
+                height: auto;
+                overflow-y: auto;
+            }
+            .ai-face {
+                width: 140px;
+                height: 140px;
+            }
+            .ai-face-inner {
+                inset: 18px;
+            }
+            #wave-label {
+                font-size: 0.95em;
+                bottom: 16px;
+            }
+
+            .main-container {
+                padding: 16px;
+            }
+
+            .ai-visual {
+                padding: 12px 0 28px;
+            }
+
+            .loading-actions button {
+                width: 100%;
+            }
+
+            .sidebar {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .sidebar .panel {
+                width: 100%;
+            }
+
+            .about-panel {
+                display: none;
+            }
+
+            header p {
+                display: none;
+            }
+
+            .status-online {
+                display: none;
+            }
+
+            .quick-commands {
+                grid-template-columns: 1fr;
+            }
+
+            .cmd-btn {
+                font-size: 0.85em;
+                padding: 10px 12px;
+                text-align: center;
+            }
+
+            .quick-commands {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🧠 <span id="ai-name">CEREBRO</span></h1>
+        <p>Seu Assistente Pessoal Inteligente</p>
+    </header>
+
+    <div class="main-container">
+        <!-- PAINEL PRINCIPAL -->
+        <div class="ai-panel">
+            <!-- Info da IA -->
+            <div class="ai-info">
+                <div class="ai-header">
+                    <div class="ai-avatar">🤖</div>
+                    <div style="text-align: left;">
+                        <h2 id="ai-name-header" style="color: #667eea; margin-bottom: 5px;">Karen</h2>
+                        <p style="color: #999;">Sua IA personalizada</p>
+                    </div>
+                </div>
+                
+                <div class="ai-status">
+                    <div class="status-card status-mood">
+                        <div class="status-label">Humor</div>
+                        <div class="status-value" id="mood-display">😐</div>
+                    </div>
+                    <div class="status-card status-energy">
+                        <div class="status-label">Energia</div>
+                        <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; margin-top: 8px; overflow: hidden;">
+                            <div id="energy-bar" style="width: 70%; height: 100%; background: #00ff00; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                    <div class="status-card status-online">
+                        <div class="status-label">Status</div>
+                        <div class="status-value" id="status-display">🟢</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualizador de Ondas / Avatar Dinâmico -->
+            <div id="wave-container">
+                <div class="ai-visual">
+                    <div class="ai-face">
+                        <span class="ai-face-ring ring-1"></span>
+                        <span class="ai-face-ring ring-2"></span>
+                        <span class="ai-face-ring ring-3"></span>
+                        <div class="ai-face-inner">
+                            <span class="ai-eye left"></span>
+                            <span class="ai-eye right"></span>
+                            <span class="ai-mouth"></span>
+                            <span class="ai-scan-line"></span>
+                        </div>
+                        <span class="ai-particle p1"></span>
+                        <span class="ai-particle p2"></span>
+                        <span class="ai-particle p3"></span>
+                    </div>
+                </div>
+                <div id="wave-label">🎤 Aguardando...</div>
+                <canvas id="wave-canvas"></canvas>
+            </div>
+
+            <!-- Chat History -->
+            <div class="chat-history" id="chat-history"></div>
+
+            <!-- Input Section -->
+            <div class="input-section">
+                <input 
+                    type="text" 
+                    class="input-text" 
+                    id="message-input" 
+                    placeholder="Diga algo para Karen..."
+                    autocomplete="off"
+                />
+                <button class="btn btn-send" id="send-btn">Enviar</button>
+                <button class="btn btn-voice" id="voice-btn">🎙️</button>
+                <button class="btn btn-settings" id="settings-btn">⚙️</button>
+            </div>
+
+            <div class="loading-banner" id="loading-banner">
+                <div class="loading-spinner"></div>
+                <div class="loading-info">
+                    <span id="loading-text">Processando...</span>
+                    <div class="loading-actions">
+                        <button id="loading-cancel">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <!-- Comandos Rápidos -->
+            <div class="panel quick-panel">
+                <h3>⚡ Comandos Rápidos</h3>
+                <div class="quick-commands">
+                    <button class="cmd-btn" onclick="window.aiChat?.quickCommand('hora')">🕐 Que horas são?</button>
+                    <button class="cmd-btn" onclick="window.aiChat?.quickCommand('piada')">😂 Conte uma piada</button>
+                    <button class="cmd-btn" onclick="window.aiChat?.quickCommand('noticia')">📰 Uma notícia</button>
+                    <button class="cmd-btn" onclick="window.aiChat?.quickCommand('dica')">💡 Dica do dia</button>
+                    <button class="cmd-btn" onclick="window.aiChat?.quickCommand('poesia')">✍️ Uma poesia</button>
+                </div>
+            </div>
+
+            <!-- Info da IA -->
+            <div class="panel about-panel">
+                <h3>ℹ️ Sobre</h3>
+                <div style="font-size: 0.9em; color: #666; line-height: 1.8;">
+                    <p><strong>Nome:</strong> <span id="info-name">Karen</span></p>
+                    <p><strong>Personalidade:</strong> <span id="info-personality">Sarcástica</span></p>
+                    <p><strong>Voz:</strong> <span id="info-voice">Feminina</span></p>
+                    <p><strong>Origem do Modelo:</strong> <span id="info-provider">Pollinations</span></p>
+                    <p><strong>Modelo de Texto:</strong> <span id="info-model">Padrão</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <button class="close-btn" onclick="closeSettings()">&times;</button>
+            <h2>⚙️ Configurações</h2>
+            
+            <div class="form-group">
+                <label>Nome da IA:</label>
+                <input type="text" id="ai-name-input" placeholder="Karen">
+            </div>
+
+            <div class="form-group">
+                <label>Personalidade:</label>
+                <select id="personality-select">
+                    <option value="sarcastic">😏 Sarcástica</option>
+                    <option value="helpful">😊 Prestativa</option>
+                    <option value="curious">🤔 Curiosa</option>
+                    <option value="mysterious">🎭 Misteriosa</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Voz:</label>
+                <select id="voice-select">
+                    <option value="karen_pt">👩 Feminina</option>
+                    <option value="male_pt">👨 Masculina</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Origem do Modelo de Texto:</label>
+                <select id="chat-provider-select">
+                    <option value="pollinations">☁️ Pollinations (nuvem)</option>
+                    <option value="ollama">💻 Ollama local</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Modelo de Texto (ex: llama3.1:latest):</label>
+                <input type="text" id="chat-model-input" placeholder="Opcional, deixe em branco para padrão">
+            </div>
+
+            <div class="form-group">
+                <label>Humor (0-100):</label>
+                <input type="range" id="mood-slider" min="0" max="100" value="50" style="padding: 0;">
+                <small style="color: #999; margin-top: 5px; display: block;">Triste ← → Feliz</small>
+            </div>
+
+            <div class="form-group">
+                <label>Energia (0-100):</label>
+                <input type="range" id="energy-slider" min="0" max="100" value="70" style="padding: 0;">
+                <small style="color: #999; margin-top: 5px; display: block;">Cansado ← → Energético</small>
+            </div>
+
+            <div class="form-group">
+                <label>Frequência de Fala:</label>
+                <input type="range" id="tendency-slider" min="0" max="100" value="60" style="padding: 0;">
+                <small style="color: #999; margin-top: 5px; display: block;">Silenciosa ← → Faladora</small>
+            </div>
+
+            <div class="form-group">
+                <label>Tópicos de Interesse (separados por vírgula):</label>
+                <input type="text" id="topics-input" placeholder="tecnologia, música, games">
+            </div>
+
+            <div class="modal-buttons">
+                <button class="save-btn" onclick="saveSettings()">Salvar Configurações</button>
+                <button class="cancel-btn" onclick="closeSettings()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="/static/js/wave-visualizer.js"></script>
+    <script src="/static/js/ai-chat.js"></script>
+    <script>
+        // Funções globais para modal
+        function openSettings() {
+            if (window.aiChat) window.aiChat.openSettings();
+        }
+        function closeSettings() {
+            if (window.aiChat) window.aiChat.closeSettings();
+        }
+        function saveSettings() {
+            if (window.aiChat) window.aiChat.saveSettings();
+        }
+        function updateMoodDisplay() {
+            if (window.aiChat) window.aiChat.updateMoodDisplay();
+        }
+        function updateEnergyDisplay() {
+            if (window.aiChat) window.aiChat.updateEnergyDisplay();
+        }
+        function updateTendencyDisplay() {
+            if (window.aiChat) window.aiChat.updateTendencyDisplay();
+        }
+    </script>
+</body>
+</html>
